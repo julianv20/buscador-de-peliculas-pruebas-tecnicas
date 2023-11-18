@@ -1,7 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Movies } from './components/Movies';
 import { useMovies } from './hooks/useMovies';
 import { Loading } from './components/Loading';
+import debounce from 'just-debounce-it';
 
 function App() {
   const [sort, setSort] = useState(false);
@@ -17,19 +18,25 @@ function App() {
 
   const handleClick = (e) => {
     e.preventDefault();
-    getMovies();
+
+    getMovies({ query });
   };
 
-  const handleSort = (e) => {
-    e.preventDefault();
+  const debounceGetMovies = useCallback(
+    debounce((query) => {
+      getMovies({ query });
+    }, 500),
+    [],
+  );
+  const handleSort = () => {
     setSort(!sort);
   };
 
-  const handleChange = (e) => {
-    const newQuery = e.target.value;
-    if (newQuery.startsWith(' ')) return;
-
-    setQuery(e.target.value);
+  const handleChange = (event) => {
+    const newSearch = event.target.value;
+    setQuery(newSearch);
+    console.log(newSearch);
+    debounceGetMovies(newSearch);
   };
 
   useEffect(() => {
@@ -65,7 +72,7 @@ function App() {
             placeholder="Game of thrones, Avengers, Shingeky no kyojin..."
             className="rounded-md p-3 bg-neutral-800 flex-1 font-light focus:outline-none "
           />
-          <input type="checkbox" />
+          <input type="checkbox" onChange={handleSort} checked={sort} />
           <button
             type="submit"
             className="bg-purple-600 rounded-md text-neutral-100 font-semibold px-5 py-2 text-md"
